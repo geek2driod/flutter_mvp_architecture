@@ -88,32 +88,6 @@ class _HomePageState extends BaseState<HomePage, HomePresenter>
           Expanded(
             child: tabPages[selectedPosition],
           ),
-          // Expanded(
-          //   child: AnimatedSwitcher(
-          //     duration: Duration(milliseconds: 400),
-          //     reverseDuration: Duration(milliseconds: 400),
-          //     switchInCurve: Curves.fastLinearToSlowEaseIn,
-          //     switchOutCurve: Curves.fastLinearToSlowEaseIn,
-          //     child: tabPages[selectedPosition],
-          //     transitionBuilder: (child, animation) {
-          //       final offsetAnimation = Tween<Offset>(
-          //         begin: Offset(
-          //           selectedPosition==0?-1.0:1.0,
-          //           0.0,
-          //         ),
-          //         end: Offset(
-          //           0.0,
-          //           0.0,
-          //         ),
-          //       ).animate(animation);
-          //
-          //       return SlideTransition(
-          //         position: offsetAnimation,
-          //         child: child,
-          //       );
-          //     },
-          //   ),
-          // ),
         ],
       );
 
@@ -194,4 +168,9 @@ class _HomePageState extends BaseState<HomePage, HomePresenter>
           ),
         ],
       );
+
+  void changeTab(int position) => setState(() {
+    tabController.index = position;
+    selectedPosition = position;
+  });
 }

@@ -9,9 +9,10 @@ import 'package:http/http.dart' as http;
 import 'package:data/repo/ocr/ocr_repo.dart';
 
 class OcrRepoImpl implements OcrRepo {
-  OcrRepoImpl(this.networkHelper);
+  OcrRepoImpl(this.networkHelper, this.storage);
 
   final NetworkHelper networkHelper;
+  final Storage storage;
 
   @override
   Future<ReadDocumentResponse> scanImage(File image) async {
@@ -33,14 +34,60 @@ class OcrRepoImpl implements OcrRepo {
       gzip: false,
     );
 
-    if (response.statusCode != 200 &&
-        response.statusCode != 201) {
+    if (response.statusCode != 200 && response.statusCode != 201) {
       throw 'Unable to fetch the response!';
     }
 
     return ReadDocumentResponse.fromJson(
       jsonDecode(response.body.toString()),
     );
+  }
 
+  @override
+  List<Document> saveDocument(String documentText) {
+    List<String> documents = storage.getList(StorageKeys.documents);
+
+    if (documents == null) {
+      documents = [];
+    }
+
+    final document = Document(
+      timeStamp: DateTime.now().toString(),
+      documentText: documentText,
+    );
+
+    documents.insert(
+      0,
+      jsonEncode(
+        document.toJson(),
+      ),
+    );
+
+    storage.setList(StorageKeys.documents, documents);
+
+    if (documents == null) return List.empty();
+
+    return documents
+        .map(
+          (e) => Document.fromJson(
+            jsonDecode(e),
+          ),
+        )
+        .toList();
+  }
+
+  @override
+  List<Document> loadLocalData() {
+    final documents = storage.getList(StorageKeys.documents);
+
+    if (documents == null) return List.empty();
+
+    return documents
+        .map(
+          (e) => Document.fromJson(
+            jsonDecode(e),
+          ),
+        )
+        .toList();
   }
 }

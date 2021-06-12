@@ -1,1 +1,1 @@
-export 'document_text.dart';
+export 'document_entity.dart';

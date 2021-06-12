@@ -7,6 +7,10 @@ mixin Storage {
 
   void setInt(String key, int value);
 
+  void setList(String key, List<String> data);
+
+  List<String> getList(String key);
+
   bool getBool(String key);
 
   bool contains(String key);

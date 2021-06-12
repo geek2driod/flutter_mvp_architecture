@@ -3,15 +3,26 @@ import 'package:flutter/material.dart';
 import 'package:flutter_better_camera/camera.dart';
 import 'package:mvp_skeleton/export.dart';
 import 'package:mvp_skeleton/main.dart';
+import 'package:mvp_skeleton/screen/capture/widgets/document_text_preview.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:provider/provider.dart';
+
+enum CapturePageViewType {
+  CAMERA_IS_NOT_READY,
+  CAMERA_PREVIEW,
+  IMAGE_PREVIEW,
+  DOCUMENT_TEXT,
+}
 
 class CapturePage extends StatefulWidget {
+
   @override
   _CapturePageState createState() => _CapturePageState();
 }
 
 class _CapturePageState extends BaseState<CapturePage, CapturePresenter>
     with CaptureView {
+  CapturePageViewType viewType = CapturePageViewType.CAMERA_PREVIEW;
   CameraController controller;
   File image;
   bool loading = false;
@@ -39,85 +50,33 @@ class _CapturePageState extends BaseState<CapturePage, CapturePresenter>
   }
 
   @override
+  // ignore: missing_return
   Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            colors.primaryDark,
-            colors.primaryDark,
-            colors.primaryLight,
-          ],
-        ),
-      ),
-      child: Stack(
-        children: [
-          _cameraPreview(),
-          image==null?SizedBox.shrink():_picturePreview(),
-          presenter.getDocumentText()!=null || presenter.getDocumentText().isNotEmpty ?_textualData():SizedBox.shrink(),
-          presenter.getDocumentText()!=null || presenter.getDocumentText().isNotEmpty ?_saveButton():loading?SizedBox.shrink():_captureButton(),
-          loading?_loading():SizedBox.shrink(),
-        ],
-      ),
-    );
+    switch (viewType) {
+      case CapturePageViewType.CAMERA_IS_NOT_READY:
+        return CameraNotReady();
+      case CapturePageViewType.CAMERA_PREVIEW:
+        return LiveCameraView(
+          controller: controller,
+          onCaptureTap: _onCaptureTap,
+        );
+      case CapturePageViewType.IMAGE_PREVIEW:
+        return ImagePreview(
+          image: image,
+        );
+      case CapturePageViewType.DOCUMENT_TEXT:
+        return DocumentTextPreview(
+          onSaveTap: (){
+            presenter.onSaveTap();
+            final homePresenter = Provider.of<HomePresenter>(context, listen: false);
+            homePresenter.onSaveDocumentTextTap();
+          },
+          documentText: presenter.getDocumentText(),
+        );
+    }
   }
 
-  Widget _cameraPreview() {
-    return AspectRatio(
-      aspectRatio: 0.6,
-      child: Container(
-        padding: EdgeInsets.all(16),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(
-            16,
-          ),
-          child: CameraPreview(controller),
-        ),
-      ),
-    );
-  }
-
-  Widget _picturePreview() {
-    return AspectRatio(
-      aspectRatio: 0.6,
-      child: Container(
-        padding: EdgeInsets.all(16),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(
-            16,
-          ),
-          child: Image.file(
-            image,
-            fit: BoxFit.cover,
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _textualData(){
-    return AspectRatio(
-      aspectRatio: 0.6,
-      child: Container(
-        padding: EdgeInsets.all(16),
-        margin: EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
-          color: colors.almostWhite,
-
-        ),
-
-        child: Text(
-          presenter.getDocumentText(),
-        ),
-      ),
-    );
-  }
-
-  void _handleCaptureButton() async {
+  void _onCaptureTap() async {
     if (controller == null || !controller.value.isInitialized) {
       // A capture is already pending, do nothing.
       return null;
@@ -138,107 +97,24 @@ class _CapturePageState extends BaseState<CapturePage, CapturePresenter>
       await controller.takePicture(filePath).then((file) {
         image = File(filePath);
         presenter.readDocument(image);
-        setState(() {});
       });
-    } on CameraException catch (e) {
-      return null;
+    } catch (e) {
+      print(e.toString());
     }
   }
 
-  Widget _captureButton() {
-    return Align(
-      alignment: FractionalOffset(
-        0.5,
-        0.9,
-      ),
-      child: TextButton(
-        style: TextButton.styleFrom(
-          minimumSize: Size(
-            sizes.width * 0.4,
-            verticalValue(40),
-          ),
-          backgroundColor: colors.primaryDark,
-          padding: EdgeInsets.all(0),
-        ),
-        onPressed: _handleCaptureButton,
-        child: Text(
-          'Capture',
-          style: textStyles.regularManrope.copyWith(
-            color: colors.almostWhite,
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _saveButton() {
-    return Align(
-      alignment: FractionalOffset(
-        0.5,
-        0.9,
-      ),
-      child: TextButton(
-        style: TextButton.styleFrom(
-          minimumSize: Size(
-            sizes.width * 0.6,
-            verticalValue(40),
-          ),
-          backgroundColor: colors.primaryDark,
-          padding: EdgeInsets.all(0),
-        ),
-        onPressed: presenter.onSaveTap,
-        child: Text(
-          'SAVE TEXT TO LIBRARY',
-          style: textStyles.regularManrope.copyWith(
-            color: colors.almostWhite,
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _loading() {
-    return Align(
-      alignment: FractionalOffset(0.5, 0.5),
-      child: IntrinsicWidth(
-        child: Container(
-          color: colors.primaryDark,
-          padding: EdgeInsets.symmetric(
-            horizontal: horizontalValue(16),
-          ),
-          height: 50,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              SizedBox(
-                width: 20,
-                height: 20,
-                child: CircularProgressIndicator(),
-              ),
-              horizontalSpace(8),
-              Text(
-                'OCR in progress..',
-                style: textStyles.regularManrope.copyWith(
-                  color: colors.almostWhite,
-                ),
-              )
-            ],
-          ),
-        ),
-      ),
-    );
-  }
+  @override
+  void showDocumentView() => setState(() {
+        viewType = CapturePageViewType.DOCUMENT_TEXT;
+      });
 
   @override
-  void showLoader() {
-    loading = true;
-    setState(() {});
-  }
+  void showImagePreview() => setState(() {
+    viewType = CapturePageViewType.IMAGE_PREVIEW;
+  });
 
   @override
-  void hideLoader() {
-    loading = false;
-    image = null;
-    setState(() {});
-  }
+  void showLiveCameraView() => setState(() {
+    viewType = CapturePageViewType.CAMERA_PREVIEW;
+  });
 }

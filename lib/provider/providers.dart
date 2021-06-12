@@ -19,5 +19,10 @@ List<SingleChildWidget> multiProviders = [
         di<ReadDocumentUseCase>()
     ),
     lazy: true,
+  ), ChangeNotifierProvider<LibraryPresenter>(
+    create: (_) => LibraryPresenterImpl(
+        di<ReadDocumentUseCase>()
+    ),
+    lazy: true,
   ),
 ];

@@ -5,6 +5,8 @@ mixin OcrRepo {
 
   Future<ReadDocumentResponse> scanImage(File image);
 
+  List<Document> saveDocument(String documentText);
 
+  List<Document> loadLocalData();
 
 }

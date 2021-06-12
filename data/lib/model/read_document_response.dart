@@ -1,7 +1,7 @@
 class ReadDocumentResponse {
   DocumentText response;
 
-  ReadDocumentResponse({this.response});
+  ReadDocumentResponse({this.response,});
 
   ReadDocumentResponse.fromJson(Map<String, dynamic> json) {
     response = json['response'] != null

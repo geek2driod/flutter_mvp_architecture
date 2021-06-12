@@ -9,10 +9,16 @@ class HomePresenterImpl extends HomePresenter {
   final ReadDocumentUseCase readDocumentUseCase;
 
   @override
-  Future readDocument(File image) async {
-    readDocumentUseCase.readDocument(image);
-
+  void init() {
+    readDocumentUseCase.init(refresh: true);
   }
+
+  @override
+  void onSaveDocumentTextTap() => view.changeTab(1);
+
+  @override
+  void onTryNowTap() => view.changeTab(0);
+
 
 
 }

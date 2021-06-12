@@ -30,6 +30,12 @@ class StorageImpl implements Storage {
   bool contains(String key) => sharedPreferences.containsKey(key);
 
   @override
-  Future<bool> remove(String key)  => sharedPreferences.remove(key);
+  Future<bool> remove(String key) => sharedPreferences.remove(key);
 
+  @override
+  List<String> getList(String key) => sharedPreferences.getStringList(key);
+
+  @override
+  void setList(String key, List<String> data) =>
+      sharedPreferences.setStringList(key, data);
 }
